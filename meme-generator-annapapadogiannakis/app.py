@@ -1,6 +1,6 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import MemeEngine
-import random,os
+import random,os, requests
 
 # Import your Ingestor and MemeEngine classes
 import MemeEngine
@@ -67,14 +67,27 @@ def meme_form():
 def meme_post():
     """ Create a user defined meme """
 
-    # @TODO:
     # 1. Use requests to save the image from the image_url
     #    form param to a temp local file.
+    image_url = request.form['image_url']
+    custom_request = requests.get(image_url, allow_redirects=True)
+    image_name = random.randint(0, 1000000)
+    tmp_file = f'./tmp/{image_name}.jpg'
+    custom_image = open(tmp_file, 'wb')
+    custom_image.write(custom_request.content)
+    custom_image.close()
+
+
     # 2. Use the meme object to generate a meme using this temp
     #    file and the body and author form paramaters.
+
+    meme = MemeEngine.MemeEngine('./static')
+    path = meme.make_meme(tmp_file, request.form['body'], request.form['author'])
+
     # 3. Remove the temporary saved image.
 
-    path = None
+    if os.path.exists(tmp_file):
+        os.remove(tmp_file)
 
     return render_template('meme.html', path=path)
 
